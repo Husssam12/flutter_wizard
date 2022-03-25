@@ -193,8 +193,8 @@ class WizardControllerImpl implements WizardController {
     _setWizardControllerInSteps();
   }
 
-  WizardControllerImpl.formController({
-    required WizardController controller,
+  WizardControllerImpl.formController(
+    WizardController controller, {
     List<WizardStepController>? stepControllers,
     StepCallback? onStepChanged,
   })  : stepControllers =
@@ -373,6 +373,7 @@ class WizardControllerImpl implements WizardController {
   void dispose() {
     pageController.dispose();
     _index.close();
+    _events.close();
   }
 
   @override
@@ -660,13 +661,22 @@ class _DefaultWizardControllerState extends State<DefaultWizardController> {
   ) {
     if (oldWidget.onStepChanged != widget.onStepChanged ||
         oldWidget.stepControllers != widget.stepControllers) {
-      controller = WizardControllerImpl.formController(
-        controller: controller,
-        onStepChanged: widget.onStepChanged,
-        stepControllers: widget.stepControllers,
-      );
+      _copyController();
     }
     super.didUpdateWidget(oldWidget);
+  }
+
+  void _copyController() {
+    final controller = this.controller;
+    if (controller is WizardControllerImpl) {
+      controller._events.close();
+      controller._index.close();
+    }
+    this.controller = WizardControllerImpl.formController(
+      controller,
+      onStepChanged: widget.onStepChanged,
+      stepControllers: widget.stepControllers,
+    );
   }
 
   void _createController() {
