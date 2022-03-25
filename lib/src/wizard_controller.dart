@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:rxdart/rxdart.dart';
-
 import '../flutter_wizard.dart';
 
 /// Coordinates the wizard steps and its input control states.
@@ -189,6 +188,19 @@ class WizardControllerImpl implements WizardController {
         _index = BehaviorSubject<int>.seeded(
           initialIndex,
         ),
+        _events = BehaviorSubject<WizardEvent>(),
+        _onStepChanged = onStepChanged {
+    _setWizardControllerInSteps();
+  }
+
+  WizardControllerImpl.formController({
+    required WizardController controller,
+    List<WizardStepController>? stepControllers,
+    StepCallback? onStepChanged,
+  })  : stepControllers =
+            List.unmodifiable(stepControllers ?? controller.stepControllers),
+        pageController = controller.pageController,
+        _index = BehaviorSubject<int>.seeded(controller.index),
         _events = BehaviorSubject<WizardEvent>(),
         _onStepChanged = onStepChanged {
     _setWizardControllerInSteps();
@@ -646,9 +658,14 @@ class _DefaultWizardControllerState extends State<DefaultWizardController> {
   void didUpdateWidget(
     covariant DefaultWizardController oldWidget,
   ) {
-    // TODO: improve to copy with
-    controller.dispose();
-    _createController();
+    if (oldWidget.onStepChanged != widget.onStepChanged ||
+        oldWidget.stepControllers != widget.stepControllers) {
+      controller = WizardControllerImpl.formController(
+        controller: controller,
+        onStepChanged: widget.onStepChanged,
+        stepControllers: widget.stepControllers,
+      );
+    }
     super.didUpdateWidget(oldWidget);
   }
 
